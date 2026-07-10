@@ -83,7 +83,7 @@ npm run dev
 | `PACT_BROKER_TOKEN`    | Valid API token for PactFlow                                    |
 | `PACT_BROKER_BASE_URL` | Fully qualified domain with protocol to your pact broker        |
 
-## Running Pact tests on HyperExecute
+## Running pactflow-example-consumer on HyperExecute
 
 [HyperExecute](https://www.lambdatest.com/hyperexecute) is LambdaTest's cloud test-orchestration platform. The `hyperexecute.yaml` in this repo is pre-configured to run the Pact consumer contract tests in the cloud with parallel execution, test reports, and artifact upload.
 
