@@ -83,6 +83,77 @@ npm run dev
 | `PACT_BROKER_TOKEN`    | Valid API token for PactFlow                                    |
 | `PACT_BROKER_BASE_URL` | Fully qualified domain with protocol to your pact broker        |
 
+## Running Pact tests on HyperExecute
+
+[HyperExecute](https://www.lambdatest.com/hyperexecute) is LambdaTest's cloud test-orchestration platform. The `hyperexecute.yaml` in this repo is pre-configured to run the Pact consumer contract tests in the cloud with parallel execution, test reports, and artifact upload.
+
+### What the pipeline does
+
+| Stage | Command | Details |
+| ----- | ------- | ------- |
+| Install | `npm ci` | Clean install with lockfile |
+| Type check | `npm run type-check` | TypeScript validation |
+| Lint | `npm run check` | Biome lint + format check |
+| Build | `npm run build` | Vite production build |
+| Test | `npx vitest run <file>` | Each spec file runs in an isolated worker |
+| Reports | auto | JUnit XML + Allure results uploaded to dashboard |
+| Artifacts | auto | `pacts/` and `reports/` saved as job artifacts |
+
+### Prerequisites
+
+1. A [LambdaTest](https://www.lambdatest.com/) account — grab your **Username** and **Access Key** from the [profile page](https://accounts.lambdatest.com/details/profile).
+2. Download the HyperExecute CLI for your OS and place it in the project root:
+
+   | OS | Download |
+   | -- | -------- |
+   | macOS | `curl -O https://downloads.lambdatest.com/hyperexecute/darwin/hyperexecute` |
+   | Linux | `curl -O https://downloads.lambdatest.com/hyperexecute/linux/hyperexecute` |
+   | Windows | `curl -O https://downloads.lambdatest.com/hyperexecute/windows/hyperexecute.exe` |
+
+   Then make it executable (macOS/Linux):
+   ```bash
+   chmod +x hyperexecute
+   ```
+
+3. Export your LambdaTest credentials:
+   ```bash
+   export LT_USERNAME="your-lambdatest-username"
+   export LT_ACCESS_KEY="your-lambdatest-access-key"
+   ```
+
+### Run
+
+```bash
+./hyperexecute --config hyperexecute.yaml
+```
+
+Or pass credentials inline without exporting:
+
+```bash
+./hyperexecute --user <LT_USERNAME> --key <LT_ACCESS_KEY> --config hyperexecute.yaml
+```
+
+### Reports
+
+After the job completes, two report types are available in the HyperExecute dashboard under the job detail page:
+
+- **JUnit XML** — pass/fail summary per test, parsed natively by the dashboard
+- **Allure** — rich HTML report with per-test logs, timeline, and response details
+
+Both are also downloadable as job artifacts alongside the generated `pacts/` contract files.
+
+### PactFlow credentials
+
+The `hyperexecute.yaml` is pre-configured with the public demo PactFlow tenant for convenience. To use your own tenant, update these two values in `hyperexecute.yaml`:
+
+```yaml
+env:
+  PACT_BROKER_BASE_URL: https://your-org.pactflow.io
+  PACT_BROKER_TOKEN: your-read-write-api-token
+```
+
+> **Publishing pacts after the run** — download the `pacts/` artifact and run `make publish_pacts` locally, or add a `post` step with the Pact broker CLI once Docker is available in your HyperExecute plan.
+
 ## Pact use cases
 
 * `make test` — run the pact test locally

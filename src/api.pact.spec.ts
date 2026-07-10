@@ -5,17 +5,20 @@ import { Product } from "./product";
 
 const { eachLike, like } = Matchers;
 
+const CONSUMER = "pactflow-example-consumer";
+const PROVIDER = process.env.PACT_PROVIDER ?? "pactflow-example-provider";
+
+console.log(`[Pact] Consumer: ${CONSUMER}`);
+console.log(`[Pact] Provider: ${PROVIDER}`);
+
 const mockProvider = new Pact({
-  consumer: "pactflow-example-consumer",
-  provider: process.env.PACT_PROVIDER
-    ? process.env.PACT_PROVIDER
-    : "pactflow-example-provider",
+  consumer: CONSUMER,
+  provider: PROVIDER,
 });
 
 describe("API Pact test", () => {
   describe("retrieving a product", () => {
     it("ID 10 exists", async () => {
-      // Arrange
       const expectedProduct = {
         id: "10",
         type: "CREDIT_CARD",
@@ -24,6 +27,13 @@ describe("API Pact test", () => {
 
       // Uncomment to see this interaction fail on the provider side
       // const expectedProduct = { id: '10', type: 'CREDIT_CARD', name: '28 Degrees', price: 30.0, newField: 22}
+
+      console.log("[Pact] Setting up interaction: GET /product/10 → 200");
+      console.log("[Pact] Provider state: 'a product with ID 10 exists'");
+      console.log(
+        "[Pact] Expected response shape:",
+        JSON.stringify(expectedProduct)
+      );
 
       await mockProvider
         .addInteraction()
@@ -41,17 +51,24 @@ describe("API Pact test", () => {
           builder.jsonBody(like(expectedProduct));
         })
         .executeTest(async (mockserver) => {
-          // Act
+          console.log(`[Pact] Mock server started at: ${mockserver.url}`);
+          console.log("[Pact] Calling API.getProduct('10')...");
+
           const api = new API(mockserver.url);
           const product = await api.getProduct("10");
 
-          // Assert - did we get the expected response
+          console.log("[Pact] Response received:", JSON.stringify(product));
           expect(product).toStrictEqual(new Product(expectedProduct));
-          return;
+          console.log("[Pact] Assertion passed ✓");
         });
     });
 
     it("product does not exist", async () => {
+      console.log("[Pact] Setting up interaction: GET /product/11 → 404");
+      console.log(
+        "[Pact] Provider state: 'a product with ID 11 does not exist'"
+      );
+
       await mockProvider
         .addInteraction()
         .given("a product with ID 11 does not exist")
@@ -63,25 +80,34 @@ describe("API Pact test", () => {
         })
         .willRespondWith(404)
         .executeTest(async (mockserver) => {
-          const api = new API(mockserver.url);
+          console.log(`[Pact] Mock server started at: ${mockserver.url}`);
+          console.log(
+            "[Pact] Calling API.getProduct('11') — expecting 404 rejection..."
+          );
 
-          // make request to Pact mock server
+          const api = new API(mockserver.url);
           await expect(api.getProduct("11")).rejects.toThrow(
             "Request failed with status code 404"
           );
-          return;
+          console.log("[Pact] 404 rejection confirmed ✓");
         });
     });
   });
 
   describe("retrieving products", () => {
     it("products exists", async () => {
-      // set up Pact interactions
       const expectedProduct = {
         id: "10",
         type: "CREDIT_CARD",
         name: "28 Degrees",
       };
+
+      console.log("[Pact] Setting up interaction: GET /products → 200 (array)");
+      console.log("[Pact] Provider state: 'products exist'");
+      console.log(
+        "[Pact] Expected response shape (eachLike):",
+        JSON.stringify(expectedProduct)
+      );
 
       await mockProvider
         .addInteraction()
@@ -99,13 +125,18 @@ describe("API Pact test", () => {
           builder.jsonBody(eachLike(expectedProduct));
         })
         .executeTest(async (mockserver) => {
+          console.log(`[Pact] Mock server started at: ${mockserver.url}`);
+          console.log("[Pact] Calling API.getAllProducts()...");
+
           const api = new API(mockserver.url);
-          // make request to Pact mock server
           const products = await api.getAllProducts();
 
-          // assert that we got the expected response
+          console.log(
+            `[Pact] Response received: ${products.length} product(s) —`,
+            JSON.stringify(products)
+          );
           expect(products).toStrictEqual([new Product(expectedProduct)]);
-          return;
+          console.log("[Pact] Assertion passed ✓");
         });
     });
   });

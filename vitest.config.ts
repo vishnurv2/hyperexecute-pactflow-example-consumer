@@ -10,5 +10,10 @@ export default defineConfig({
     css: true,
     include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     testTimeout: 30_000,
+    reporters: [
+      "verbose",
+      ["junit", { outputFile: "reports/junit.xml" }],
+      ["allure-vitest/reporter", { resultsDir: "reports/allure-results" }],
+    ],
   },
 });
