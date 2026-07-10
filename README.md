@@ -1,4 +1,4 @@
-# Example Consumer
+# Running pactflow-example-consumer on HyperExecute
 
 [![Build](https://github.com/pactflow/example-consumer/actions/workflows/build.yml/badge.svg)](https://github.com/pactflow/example-consumer/actions/workflows/build.yml)
 
