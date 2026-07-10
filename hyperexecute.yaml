@@ -34,6 +34,11 @@ cacheKey: '{{ checksum "package-lock.json" }}'
 cacheDirectories:
   - node_modules
 
+# Start the Vite dev server in the background before tests run
+background:
+  - node: VITE_API_BASE_URL=http://localhost:8080 npm run dev
+    waitDuration: 10
+
 testDiscovery:
   type: raw
   mode: dynamic
